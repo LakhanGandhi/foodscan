@@ -26,8 +26,8 @@ const cors = require("cors");
 const app = express();
 app.use(cors());
 
-const PRODUCTS_PATH = path.join(__dirname, "data", "products.json");
-const COMPANIES_PATH = path.join(__dirname, "data", "companies.json");
+const PRODUCTS_PATH = path.join(__dirname, "products.json");
+const COMPANIES_PATH = path.join(__dirname, "companies.json");
 
 const NEAR_EXPIRY_WINDOW_DAYS = 15;
 
