@@ -1,0 +1,17 @@
+{
+  "ABC001": {
+    "name": "Sunrise Foods Pvt. Ltd.",
+    "address": "Plot 42, MIDC Industrial Area, Pune, Maharashtra 411019, India",
+    "fssai": "10023045001234"
+  },
+  "DEF002": {
+    "name": "Farmhouse Snacks Ltd.",
+    "address": "Sy. No. 118, Growth Centre, Hyderabad, Telangana 500055, India",
+    "fssai": "10019876005678"
+  },
+  "GHI003": {
+    "name": "Golden Farms Confectionery Pvt. Ltd.",
+    "address": "Industrial Estate, Phase II, Ludhiana, Punjab 141010, India",
+    "fssai": "10011122003344"
+  }
+}

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Check — Scan Result</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5F2E9;
+    --paper-dark:#EBE6D8;
+    --ink:#22201B;
+    --ink-soft:#5B564C;
+    --line:#CFC6AE;
+    --teal:#2E6B70;
+    --teal-dim:#E4EEEE;
+    --safe:#3E7D4C;
+    --safe-bg:#E6F1E7;
+    --warn:#B97909;
+    --warn-bg:#F7EBD6;
+    --danger:#B23B3B;
+    --danger-bg:#F5E0DD;
+    --radius:2px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: repeating-linear-gradient(180deg, #DAD3C0 0px, #DAD3C0 1px, #E1DACA 1px, #E1DACA 2px);
+    background-color:#DAD3C0;
+    min-height:100vh;
+    padding:32px 12px 80px;
+    font-family:'IBM Plex Sans', sans-serif;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+  }
+
+  /* ---------- svg grunge filter (used for the stamp) ---------- */
+
+  .receipt{
+    width:100%;
+    max-width:460px;
+    background:var(--paper);
+    position:relative;
+    box-shadow:0 18px 40px -12px rgba(0,0,0,0.35);
+    padding:0 0 28px;
+  }
+  .receipt::before, .receipt::after{
+    content:"";
+    display:block;
+    height:14px;
+    background:
+      radial-gradient(circle at 12px 0, transparent 10px, var(--paper) 11px) top left / 24px 14px repeat-x,
+      var(--DAD3C0, transparent);
+  }
+  .receipt::before{ transform: translateY(-1px); }
+  .receipt::after{ transform: translateY(1px) rotate(180deg); }
+
+  .top-strip{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:14px 22px 10px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.06em;
+    color:var(--ink-soft);
+    border-bottom:1px dashed var(--line);
+  }
+  .top-strip .brandmark{ font-weight:600; color:var(--teal); }
+
+  .header{
+    padding:22px 22px 4px;
+    text-align:center;
+  }
+  .icon-wrap{
+    width:76px; height:76px;
+    margin:0 auto 12px;
+    border-radius:50%;
+    background:var(--paper-dark);
+    display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--line);
+  }
+  .icon-wrap svg{ width:42px; height:42px; }
+
+  .product-name{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-weight:700;
+    font-size:22px;
+    line-height:1.2;
+    margin:0 0 2px;
+  }
+  .product-brand{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin:0 0 2px;
+  }
+  .product-meta{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    letter-spacing:0.03em;
+  }
+
+  /* ---------- the stamp ---------- */
+  .stamp-zone{
+    display:flex; justify-content:center;
+    padding:18px 20px 6px;
+  }
+  .stamp{
+    font-family:'Special Elite', monospace;
+    text-transform:uppercase;
+    font-size:20px;
+    letter-spacing:0.06em;
+    padding:10px 22px;
+    border:3px solid currentColor;
+    border-radius:6px;
+    transform:rotate(-5deg);
+    filter:url(#roughen);
+    display:inline-flex;
+    flex-direction:column;
+    align-items:center;
+    line-height:1.15;
+    position:relative;
+  }
+  .stamp .sub{
+    font-size:10px;
+    letter-spacing:0.18em;
+    font-family:'IBM Plex Mono', monospace;
+    margin-top:2px;
+  }
+  .stamp.safe{ color:var(--safe); background:var(--safe-bg); }
+  .stamp.warn{ color:var(--warn); background:var(--warn-bg); }
+  .stamp.danger{ color:var(--danger); background:var(--danger-bg); }
+
+  /* ---------- sections ---------- */
+  .section{
+    padding:16px 22px;
+    border-bottom:1px dashed var(--line);
+  }
+  .section:last-of-type{ border-bottom:none; }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    color:var(--teal);
+    font-weight:600;
+    margin:0 0 10px;
+  }
+  .dates-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .date-box{
+    background:var(--paper-dark);
+    padding:10px 12px;
+    border-radius:var(--radius);
+  }
+  .date-box .label{ font-size:10px; color:var(--ink-soft); letter-spacing:0.06em; text-transform:uppercase; }
+  .date-box .value{ font-family:'IBM Plex Mono', monospace; font-size:15px; font-weight:600; margin-top:3px; }
+
+  .ingredients-text{
+    font-size:13.5px;
+    line-height:1.6;
+    color:var(--ink);
+  }
+  .ingredients-text b{ font-weight:600; }
+
+  table.nutrition{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+  }
+  table.nutrition th{
+    text-align:left;
+    font-size:10.5px;
+    letter-spacing:0.05em;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    padding:4px 0;
+    border-bottom:1px solid var(--line);
+  }
+  table.nutrition td{
+    padding:6px 0;
+    border-bottom:1px solid #E4DECB;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  table.nutrition tr:last-child td{ border-bottom:none; }
+  table.nutrition td.num{ text-align:right; }
+
+  .allergen-list{
+    display:flex; flex-wrap:wrap; gap:8px;
+  }
+  .allergen-chip{
+    font-size:12px;
+    font-weight:600;
+    padding:6px 10px;
+    background:var(--danger-bg);
+    color:var(--danger);
+    border-radius:20px;
+    border:1px solid #E6C3BC;
+  }
+  .allergen-list.none .allergen-chip{
+    background:var(--safe-bg); color:var(--safe); border-color:#C8DFC9;
+  }
+
+  .mfr-block{ font-size:13px; line-height:1.7; }
+  .mfr-block .fssai{
+    margin-top:8px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    background:var(--teal-dim);
+    color:var(--teal);
+    display:inline-block;
+    padding:5px 10px;
+    border-radius:var(--radius);
+    font-weight:600;
+  }
+
+  .footer-note{
+    padding:16px 22px 0;
+    font-size:11px;
+    color:var(--ink-soft);
+    text-align:center;
+    font-family:'IBM Plex Mono', monospace;
+  }
+
+  .not-found{ padding:60px 22px; text-align:center; }
+  .not-found .code{ font-family:'IBM Plex Mono', monospace; color:var(--ink-soft); font-size:12px; }
+  .not-found .hint{ font-size:12.5px; color:var(--ink-soft); margin-top:10px; line-height:1.6; }
+
+  .loading{ padding:80px 22px; text-align:center; color:var(--ink-soft); font-family:'IBM Plex Mono', monospace; font-size:12px; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <filter id="roughen" x="-20%" y="-20%" width="140%" height="140%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="7" result="noise"/>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="6" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<div class="receipt" id="receipt"></div>
+
+<script>
+/* =========================================================================
+   DATA LAYER
+   This page always expects an "id" in the URL - it never lets someone
+   browse or pick a product. That id is exactly what's encoded in the QR
+   code printed on the package, e.g.:
+     https://yourdomain.com/?id=ABC001SP12345
+
+   ID FORMAT:  [Company Code: 3 letters + 3 digits]
+             + [Filler: 1 letter, ignored - obfuscation only]
+             + [Product Code: "P" + 5 digits]
+   e.g. ABC001 S P12345
+         company  ^     product
+              (filler, meaningless)
+
+   Point this at your real API once it's deployed:
+   ========================================================================= */
+const API_BASE = "https://your-api.example.com/api/products"; // <-- set this to your deployed API
+
+const ID_PATTERN = /^([A-Z]{3}\d{3})([A-Z])(P\d{5})$/i;
+
+function isValidIdFormat(id) {
+  return ID_PATTERN.test((id || "").trim());
+}
+
+async function fetchProduct(id) {
+  const res = await fetch(`${API_BASE}/${encodeURIComponent(id)}`);
+  if (res.status === 404) return { notFound: true };
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return { data: await res.json() };
+}
+
+function fmtDate(d) {
+  return new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+/* ---------------- icons ---------------- */
+const ICONS = {
+  biscuit: `<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="18" fill="#D8B992"/><circle cx="17" cy="18" r="2" fill="#8A6238"/><circle cx="29" cy="16" r="2" fill="#8A6238"/><circle cx="31" cy="27" r="2" fill="#8A6238"/><circle cx="18" cy="30" r="2" fill="#8A6238"/><circle cx="24" cy="24" r="2" fill="#8A6238"/></svg>`,
+  chips: `<svg viewBox="0 0 48 48" fill="none"><path d="M10 40 Q6 20 20 8 Q34 4 40 20 Q38 40 24 40 Q16 40 10 40Z" fill="#E0A93C"/><path d="M14 30 Q20 22 30 24" stroke="#A9711A" stroke-width="2" fill="none"/></svg>`,
+  candy: `<svg viewBox="0 0 48 48" fill="none"><rect x="14" y="16" width="20" height="16" rx="4" fill="#E8C7D8"/><path d="M14 24 L4 16 V32 Z" fill="#C98CAE"/><path d="M34 24 L44 16 V32 Z" fill="#C98CAE"/></svg>`
+};
+
+/* ---------------- rendering ---------------- */
+function renderProduct(id, p) {
+  const status = p.status; // computed server-side by the API
+  const n = p.nutritionPer100g;
+  const mfr = p.manufacturer || { name: "Not on file", address: "—", fssai: "—" };
+
+  document.getElementById('receipt').innerHTML = `
+    <div class="top-strip">
+      <span class="brandmark">FOODCHECK</span>
+      <span>ID · ${id}</span>
+    </div>
+
+    <div class="header">
+      <div class="icon-wrap">${ICONS[p.icon] || ICONS.biscuit}</div>
+      <p class="product-name">${p.name}</p>
+      <p class="product-brand">${p.brand}</p>
+      <p class="product-meta">BATCH ${p.batch}</p>
+    </div>
+
+    <div class="stamp-zone">
+      <div class="stamp ${status.key}">
+        ${status.label}
+        <span class="sub">${status.sub}</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="eyebrow">MANUFACTURING &amp; EXPIRY</p>
+      <div class="dates-grid">
+        <div class="date-box"><div class="label">Manufactured</div><div class="value">${fmtDate(p.mfgDate)}</div></div>
+        <div class="date-box"><div class="label">Best Before</div><div class="value">${fmtDate(p.expDate)}</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="eyebrow">INGREDIENTS</p>
+      <p class="ingredients-text">${p.ingredients}</p>
+    </div>
+
+    <div class="section">
+      <p class="eyebrow">NUTRITION — PER 100 g</p>
+      <table class="nutrition">
+        <tr><th>Component</th><th style="text-align:right">Amount</th></tr>
+        <tr><td>Energy</td><td class="num">${n.energy}</td></tr>
+        <tr><td>Protein</td><td class="num">${n.protein}</td></tr>
+        <tr><td>Total Fat</td><td class="num">${n.fat}</td></tr>
+        <tr><td>&nbsp;&nbsp;of which Saturated</td><td class="num">${n.saturatedFat}</td></tr>
+        <tr><td>Carbohydrates</td><td class="num">${n.carbohydrates}</td></tr>
+        <tr><td>&nbsp;&nbsp;of which Sugars</td><td class="num">${n.sugars}</td></tr>
+        <tr><td>Dietary Fiber</td><td class="num">${n.fiber}</td></tr>
+        <tr><td>Sodium</td><td class="num">${n.sodium}</td></tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <p class="eyebrow">ALLERGEN WARNINGS</p>
+      <div class="allergen-list ${p.allergens.length ? '' : 'none'}">
+        ${p.allergens.length
+          ? p.allergens.map(a => `<span class="allergen-chip">${a}</span>`).join('')
+          : `<span class="allergen-chip">No known allergens declared</span>`}
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="eyebrow">MANUFACTURER &amp; FSSAI</p>
+      <div class="mfr-block">
+        <div><b>${mfr.name}</b></div>
+        <div>${mfr.address}</div>
+        <div class="fssai">FSSAI Lic. No. ${mfr.fssai}</div>
+      </div>
+    </div>
+
+    <p class="footer-note">Scanned via package QR &nbsp;·&nbsp; Data refreshed live from FoodCheck DB</p>
+  `;
+}
+
+function renderMessage(id, title, message) {
+  document.getElementById('receipt').innerHTML = `
+    <div class="top-strip"><span class="brandmark">FOODCHECK</span><span>${id ? 'ID · ' + id : ''}</span></div>
+    <div class="not-found">
+      <p style="font-size:16px;font-weight:600;margin:0 0 8px;">${title}</p>
+      <p style="font-size:13px;color:var(--ink-soft);margin:0 0 4px;">${message}</p>
+      ${id ? `<p class="code">Scanned code: ${id}</p>` : ""}
+    </div>
+  `;
+}
+
+function renderLoading() {
+  document.getElementById('receipt').innerHTML = `
+    <div class="top-strip"><span class="brandmark">FOODCHECK</span><span></span></div>
+    <div class="loading">Looking up product…</div>
+  `;
+}
+
+/* ---------------- boot ----------------
+   This page never shows a product list or a picker - it only ever
+   resolves the single "id" in its own URL, exactly like a QR landing
+   page should. */
+(async function init() {
+  const params = new URLSearchParams(location.search);
+  const id = (params.get('id') || '').toUpperCase();
+
+  if (!id) {
+    renderMessage(null, "No product code detected", "This page is meant to be opened by scanning the QR code on a package, not visited directly.");
+    return;
+  }
+
+  if (!isValidIdFormat(id)) {
+    renderMessage(id, "Unrecognised code", "This doesn't match a valid FoodCheck product code. The label may be damaged or misprinted.");
+    return;
+  }
+
+  renderLoading();
+
+  try {
+    const result = await fetchProduct(id);
+    if (result.notFound) {
+      renderMessage(id, "Product not registered", "This code is correctly formatted, but no product is on file for it yet.");
+      return;
+    }
+    renderProduct(id, result.data);
+  } catch (err) {
+    renderMessage(id, "Couldn't reach FoodCheck", "We couldn't check this product right now. Please try scanning again in a moment.");
+  }
+})();
+</script>
+</body>
+</html>

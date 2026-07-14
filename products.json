@@ -1,0 +1,68 @@
+{
+  "ABC001SP12345": {
+    "companyCode": "ABC001",
+    "productCode": "P12345",
+    "name": "Sunrise Digestive Biscuits",
+    "brand": "Sunrise Foods",
+    "icon": "biscuit",
+    "batch": "B22019",
+    "mfgDate": "2026-01-14",
+    "expDate": "2026-07-20",
+    "ingredients": "Whole wheat flour (52%), sugar, edible vegetable oil (palm), invert syrup, raising agents (E500, E503), iodised salt, emulsifier (E322 \u2013 soy lecithin), malt extract, artificial flavouring (vanilla).",
+    "nutritionPer100g": {
+      "energy": "462 kcal",
+      "protein": "7.1 g",
+      "fat": "16.8 g",
+      "saturatedFat": "8.2 g",
+      "carbohydrates": "70.4 g",
+      "sugars": "18.2 g",
+      "fiber": "3.1 g",
+      "sodium": "410 mg"
+    },
+    "allergens": ["Wheat (Gluten)", "Soy", "May contain traces of milk"]
+  },
+  "DEF002XP54321": {
+    "companyCode": "DEF002",
+    "productCode": "P54321",
+    "name": "Crispy Wheat Chips \u2014 Masala",
+    "brand": "Farmhouse Snacks",
+    "icon": "chips",
+    "batch": "F118755",
+    "mfgDate": "2026-06-02",
+    "expDate": "2026-12-02",
+    "ingredients": "Wheat flour, edible vegetable oil (sunflower), corn starch, seasoning (spices, salt, sugar, citric acid E330, onion powder, garlic powder), acidity regulator (E296).",
+    "nutritionPer100g": {
+      "energy": "521 kcal",
+      "protein": "6.8 g",
+      "fat": "27.5 g",
+      "saturatedFat": "12.4 g",
+      "carbohydrates": "58.9 g",
+      "sugars": "3.4 g",
+      "fiber": "2.6 g",
+      "sodium": "690 mg"
+    },
+    "allergens": ["Wheat (Gluten)"]
+  },
+  "GHI003QP67890": {
+    "companyCode": "GHI003",
+    "productCode": "P67890",
+    "name": "Golden Farms Milk Toffees",
+    "brand": "Golden Farms",
+    "icon": "candy",
+    "batch": "GF04562",
+    "mfgDate": "2025-09-10",
+    "expDate": "2026-06-15",
+    "ingredients": "Sugar, skimmed milk powder, edible vegetable fat (palm), lactose, glucose syrup, emulsifier (E442, E476), salt, artificial flavour (milk, cardamom).",
+    "nutritionPer100g": {
+      "energy": "445 kcal",
+      "protein": "3.2 g",
+      "fat": "12.1 g",
+      "saturatedFat": "10.8 g",
+      "carbohydrates": "78.6 g",
+      "sugars": "71.3 g",
+      "fiber": "0 g",
+      "sodium": "95 mg"
+    },
+    "allergens": ["Milk"]
+  }
+}

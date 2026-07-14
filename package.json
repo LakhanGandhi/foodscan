@@ -1,0 +1,13 @@
+{
+  "name": "foodcheck-api",
+  "version": "1.0.0",
+  "description": "API that resolves a scanned package ID to product safety details.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}
