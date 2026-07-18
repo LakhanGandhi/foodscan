@@ -227,6 +227,18 @@
     font-family:'IBM Plex Mono', monospace;
   }
 
+  .caution-banner{
+    margin:16px 22px 0;
+    padding:12px 14px;
+    background:var(--warn-bg);
+    border:1px solid #E3C583;
+    border-radius:4px;
+    font-size:12.5px;
+    color:#7A5406;
+    line-height:1.5;
+  }
+  .caution-banner b{ display:block; margin-bottom:2px; font-size:13px; }
+
   .not-found{ padding:60px 22px; text-align:center; }
   .not-found .code{ font-family:'IBM Plex Mono', monospace; color:var(--ink-soft); font-size:12px; }
   .not-found .hint{ font-size:12.5px; color:var(--ink-soft); margin-top:10px; line-height:1.6; }
@@ -311,6 +323,12 @@ function renderProduct(id, p) {
         <span class="sub">${status.sub}</span>
       </div>
     </div>
+
+    ${p.scanFlag && p.scanFlag.suspicious ? `
+    <div class="caution-banner">
+      <b>Unusual scan pattern</b>
+      This code has been scanned from ${p.scanFlag.distinctLocations} different locations in the last ${p.scanFlag.windowDays} days. This can happen for harmless reasons, but if something about this product seems off, we'd recommend contacting the manufacturer before consuming it.
+    </div>` : ""}
 
     <div class="section">
       <p class="eyebrow">MANUFACTURING &amp; EXPIRY</p>
