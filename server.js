@@ -1,23 +1,20 @@
 /**
- * FoodCheck API — MongoDB-backed version
+ * FoodCheck API — v3 (opaque IDs + company/plant separation)
  * ---------------------------------------------------------------
- * Serves product-safety data for a scanned package ID.
+ * The QR code on a package encodes ONE opaque, random product ID
+ * (a NanoID-style string, e.g. "Qx7mZk2LpT"). There is nothing to
+ * decode in it - it's just a lookup key. All the structure lives
+ * in the database instead:
  *
- * ID FORMAT:   [Company Code: 3 letters + 3 digits]
- *            + [Filler: 1 letter, ignored - obfuscation only]
- *            + [Product Code: "P" + 5 digits]
- *   e.g.  ABC001SP12345
+ *   companies  { _id, name, registeredAddress, ... }
+ *   plants     { _id, companyId (ref), label, address, fssaiLicense }
+ *   products   { _id, companyId (ref), plantId (ref), name, brand,
+ *                batch, mfgDate, expDate, ingredients,
+ *                nutritionPer100g, allergens }
  *
- * DATABASE:
- *   Connection string comes from the MONGODB_URI environment variable -
- *   it is NEVER hardcoded here. Set it in Render's dashboard
- *   (Environment tab) and, for local dev, in a .env file that is
- *   git-ignored (see .env.example).
- *
- *   Database: foodscan
- *   Collections:
- *     companies  -> _id = companyCode, { name, address, fssai }
- *     products   -> _id = full scanned id, { companyCode, productCode, ...details }
+ * A product references BOTH companyId and plantId directly, so a
+ * lookup only ever needs two extra queries (plant, company) - no
+ * joins across joins.
  * ---------------------------------------------------------------
  */
 
@@ -34,7 +31,7 @@ const MONGODB_URI = process.env.MONGODB_URI;
 const DB_NAME = process.env.DB_NAME || "foodscan";
 
 if (!MONGODB_URI) {
-  console.error("Missing MONGODB_URI environment variable. Set it before starting the server.");
+  console.error("Missing MONGODB_URI environment variable.");
   process.exit(1);
 }
 
@@ -47,26 +44,11 @@ async function connectDB() {
   console.log(`Connected to MongoDB database "${DB_NAME}"`);
 }
 
-// ---- ID validation -------------------------------------------------
-const ID_PATTERN = /^([A-Z]{3}\d{3})([A-Z])(P\d{5})$/;
+// Loose sanity check only - NOT a security boundary, just filters out
+// obviously junk input before hitting the database. Adjust length
+// range if you change the generator.
+const ID_SHAPE = /^[A-Z0-9]{6,14}$/i;
 
-function parseScanId(rawId) {
-  const id = String(rawId || "").toUpperCase().trim();
-  const match = ID_PATTERN.exec(id);
-  if (!match) return null;
-  return { fullId: id, companyCode: match[1], productCode: match[3] };
-}
-
-// ---- data access (Mongo instead of JSON files) ----------------------
-async function getProductRecord(fullId) {
-  return db.collection("products").findOne({ _id: fullId });
-}
-
-async function getCompanyRecord(companyCode) {
-  return db.collection("companies").findOne({ _id: companyCode });
-}
-
-// ---- status logic ----------------------------------------------------
 function computeStatus(expDateStr) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -82,34 +64,35 @@ function computeStatus(expDateStr) {
   return { key: "safe", label: "Safe to Consume", sub: `${daysLeft} day(s) left` };
 }
 
-// ---- routes ------------------------------------------------------------
-
 app.get("/api/products/:id", async (req, res) => {
   try {
-    const parsed = parseScanId(req.params.id);
-    if (!parsed) {
+    const id = String(req.params.id || "").trim();
+
+    if (!ID_SHAPE.test(id)) {
       return res.status(400).json({
         error: "invalid_id_format",
-        message: "This code doesn't match a recognised FoodCheck product ID.",
+        message: "This code doesn't look like a valid FoodCheck product ID.",
       });
     }
 
-    const product = await getProductRecord(parsed.fullId);
+    const product = await db.collection("products").findOne({ _id: id });
     if (!product) {
       return res.status(404).json({
         error: "product_not_found",
         message: "No product is registered under this ID.",
-        id: parsed.fullId,
+        id,
       });
     }
 
-    const company = await getCompanyRecord(parsed.companyCode);
+    const [plant, company] = await Promise.all([
+      product.plantId ? db.collection("plants").findOne({ _id: product.plantId }) : null,
+      product.companyId ? db.collection("companies").findOne({ _id: product.companyId }) : null,
+    ]);
+
     const status = computeStatus(product.expDate);
 
     res.json({
-      id: parsed.fullId,
-      companyCode: parsed.companyCode,
-      productCode: parsed.productCode,
+      id: product._id,
       name: product.name,
       brand: product.brand,
       icon: product.icon,
@@ -120,8 +103,9 @@ app.get("/api/products/:id", async (req, res) => {
       ingredients: product.ingredients,
       nutritionPer100g: product.nutritionPer100g,
       allergens: product.allergens,
-      manufacturer: company
-        ? { name: company.name, address: company.address, fssai: company.fssai }
+      company: company ? { name: company.name, registeredAddress: company.registeredAddress } : null,
+      plant: plant
+        ? { label: plant.label, address: plant.address, fssaiLicense: plant.fssaiLicense }
         : null,
     });
   } catch (err) {
@@ -142,9 +126,7 @@ app.get("/api/health", async (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 connectDB()
-  .then(() => {
-    app.listen(PORT, () => console.log(`FoodCheck API running on port ${PORT}`));
-  })
+  .then(() => app.listen(PORT, () => console.log(`FoodCheck API running on port ${PORT}`)))
   .catch((err) => {
     console.error("Failed to connect to MongoDB:", err.message);
     process.exit(1);

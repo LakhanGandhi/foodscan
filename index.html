@@ -249,25 +249,22 @@
 /* =========================================================================
    DATA LAYER
    This page always expects an "id" in the URL - it never lets someone
-   browse or pick a product. That id is exactly what's encoded in the QR
-   code printed on the package, e.g.:
-     https://yourdomain.com/?id=ABC001SP12345
+   browse or pick a product. That id is the single opaque token encoded
+   in the package's QR code, e.g.:
+     https://yourdomain.com/?id=Qx7mZk2LpT
 
-   ID FORMAT:  [Company Code: 3 letters + 3 digits]
-             + [Filler: 1 letter, ignored - obfuscation only]
-             + [Product Code: "P" + 5 digits]
-   e.g. ABC001 S P12345
-         company  ^     product
-              (filler, meaningless)
-
-   Point this at your real API once it's deployed:
+   There's nothing to decode in the ID itself - it's just a random lookup
+   key. The API resolves it to a product, then to that product's plant
+   and company records.
    ========================================================================= */
-const API_BASE = "https://foodscan-zr3a.onrender.com/api/products"; // <-- set this to your deployed API
+const API_BASE = "https://foodscan-zr3a.onrender.com/api/products";
 
-const ID_PATTERN = /^([A-Z]{3}\d{3})([A-Z])(P\d{5})$/i;
+// Loose shape check only, to avoid a wasted request on obvious junk -
+// not a real validation of the ID itself.
+const ID_SHAPE = /^[A-Z0-9]{6,14}$/i;
 
 function isValidIdFormat(id) {
-  return ID_PATTERN.test((id || "").trim());
+  return ID_SHAPE.test((id || "").trim());
 }
 
 async function fetchProduct(id) {
@@ -292,7 +289,8 @@ const ICONS = {
 function renderProduct(id, p) {
   const status = p.status; // computed server-side by the API
   const n = p.nutritionPer100g;
-  const mfr = p.manufacturer || { name: "Not on file", address: "—", fssai: "—" };
+  const plant = p.plant || { label: "Not on file", address: "—", fssaiLicense: "—" };
+  const company = p.company || { name: p.brand || "Not on file", registeredAddress: "—" };
 
   document.getElementById('receipt').innerHTML = `
     <div class="top-strip">
@@ -352,11 +350,19 @@ function renderProduct(id, p) {
     </div>
 
     <div class="section">
-      <p class="eyebrow">MANUFACTURER &amp; FSSAI</p>
+      <p class="eyebrow">MANUFACTURED AT</p>
       <div class="mfr-block">
-        <div><b>${mfr.name}</b></div>
-        <div>${mfr.address}</div>
-        <div class="fssai">FSSAI Lic. No. ${mfr.fssai}</div>
+        <div><b>${plant.label}</b></div>
+        <div>${plant.address}</div>
+        <div class="fssai">FSSAI Lic. No. ${plant.fssaiLicense}</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="eyebrow">BRAND OWNER</p>
+      <div class="mfr-block">
+        <div><b>${company.name}</b></div>
+        <div>${company.registeredAddress}</div>
       </div>
     </div>
 
